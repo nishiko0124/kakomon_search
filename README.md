@@ -1,23 +1,34 @@
-# Kakomon CSV 検索アプリ
+# kakomon_search
 
-簡単なStreamlitアプリケーションです。CSVを読み込み、任意の2列に対して部分一致検索（AND）を行えます。また、UIから行を追加できます。
+Simple Streamlit app to search CSVs for course/year/teacher. This repository contains:
 
-## 使い方
+- `app.py` - Streamlit application
+- `kakodata_utils.py` - CSV loading and search utilities
+- `requirements.txt` - runtime dependencies
 
-1. Python環境を用意し、依存パッケージをインストールします:
+Quick start
+
+1. Create a Python virtual environment and install requirements:
 
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-2. デフォルトCSVパスは `/Users/nishikawakotone/Documents/kotone_app/kakomondata/kakodata.csv` です。別のCSVをサイドバーからアップロードして使うこともできます。
-
-3. アプリを起動します:
+2. Run the Streamlit app locally:
 
 ```bash
 streamlit run app.py
 ```
 
-## 注意点
-- 行追加時に既存ファイルがあるとバックアップ（同ディレクトリに `kakodata.backup_<timestamp>.csv`）が作成されます。
-- 大文字小文字を区別せず部分一致で検索します。
+3. Deploy to Streamlit Community Cloud:
+
+- Push this repository to GitHub (already done in this repo)
+- On Streamlit Cloud create a new app and point it at this repository and the `main` branch. Set the entrypoint to `app.py`.
+
+Notes
+
+- Do not commit your local virtual environment. `.venv/` is excluded from the repository history.
+- The app supports uploading CSVs via the UI; if none are uploaded it reads CSV files from a default local directory (for local testing).
+
