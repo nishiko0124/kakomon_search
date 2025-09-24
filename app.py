@@ -136,33 +136,23 @@ else:
             mime='text/csv'
         )
 
-        # ハイライト表示
-        def highlight_html(df_to_render, search_filters):
-            """検索キーワードにマッチするセルをハイライトするHTMLテーブルを生成します。"""
-            html = df_to_render.to_html(escape=True, index=False)
+        # --- ★★★ここを修正しました★★★ ---
+        # ハイライト表示のロジックを安全な方法に変更
+        def highlight_matches(val, search_filters):
+            val_str = str(val)
             for col, query, mode in search_filters:
-                if not query.strip():
-                    continue
+                # 'contains'モードではクエリをエスケープ
+                pattern = re.escape(query) if mode == 'contains' else query
                 try:
-                    # 'contains'モードではクエリをエスケープし、'regex'モードではそのまま使用
-                    pattern = re.escape(query) if mode == 'contains' else query
-                    # HTMLエンティティを考慮しつつ置換
-                    repl = lambda m: f"<mark>{m.group(0)}</mark>"
-                    # 各セル（<td>...</td>）内のテキストにハイライトを適用
-                    html = re.sub(
-                        f'(>)([^<]*?)({pattern})([^<]*?)(<)',
-                        r'\\1\\2<mark>\\3</mark>\\4\\5',
-                        html,
-                        flags=re.IGNORECASE
-                    )
+                    if re.search(pattern, val_str, flags=re.IGNORECASE):
+                        return 'background-color: #FFF1A2' # ハイライト色
                 except re.error:
-                    # 無効な正規表現は無視
-                    continue
-            return html.replace('<td>', '<td style="text-align: left;">') # 左寄せに調整
+                    continue # 無効な正規表現は無視
+            return ''
 
         if st.session_state.do_highlight and filters:
-            html_table = highlight_html(res, filters)
-            st.markdown(html_table, unsafe_allow_html=True)
+            # DataFrameのStyler機能を使って安全にハイライトする
+            st.dataframe(res.style.applymap(lambda val: highlight_matches(val, filters)))
         else:
             st.dataframe(res)
 
