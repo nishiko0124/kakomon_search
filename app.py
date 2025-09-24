@@ -10,19 +10,29 @@ from pathlib import Path
 from kakodata_utils import load_csv, load_csvs_from_dir, search_df
 
 DEFAULT_DIR = "/Users/nishikawakotone/Documents/kotone_app/kakomondata"
+REPO_DATA_DIR = Path('data')
 
 st.set_page_config(page_title="過去問検索", layout="wide")
 st.title("過去問検索ツール")
 
+# prefer repository `data/` if present (so deployed app or repo includes bundled CSVs)
 csv_path = DEFAULT_DIR
+if REPO_DATA_DIR.exists() and REPO_DATA_DIR.is_dir():
+    # use relative repo data dir when present
+    csv_path = str(REPO_DATA_DIR)
 
-# Allow user to upload one or more CSV files in the deployed app.
-uploaded_files = st.file_uploader('CSVファイルをアップロード（省略可）', type=['csv'], accept_multiple_files=True)
+# Note: this app now always uses repository `data/` when present.
+st.info('このアプリはリポジトリ内の `data/` を常に使用します。アップロードしたCSVは無視されます。')
 
-# Option: prefer loading local CSVs from DEFAULT_DIR. If local exists and this is checked,
-# we always load local CSVs. Uploaded files (if any) will be appended after local data.
-force_local = st.checkbox('ローカルのCSVを優先して常に読み込む（存在する場合）', value=True)
+# Allow user to upload one or more CSV files in the deployed app (uploads are ignored if data/ exists)
+uploaded_files = st.file_uploader('CSVファイルをアップロード（data/ が無ければ代替として使用できます）', type=['csv'], accept_multiple_files=True)
 
+# Option kept for legacy behavior if you want explicit local fallback, but default is to use data/
+force_local = st.checkbox('リポジトリ内の data/ がない場合、ユーザ指定のローカル DEFAULT_DIR を使う', value=False)
+
+force_local = st.checkbox('リポジトリ内の data/ がない場合、ユーザ指定のローカル DEFAULT_DIR を使う', value=False)
+
+# Prepare uploaded dfs (uploads are fallback only when data/ is missing)
 df = pd.DataFrame()
 uploaded_dfs = []
 if uploaded_files:
@@ -32,34 +42,27 @@ if uploaded_files:
         except Exception:
             continue
 
-try:
-    p = Path(csv_path)
-    local_exists = p.exists() and p.is_dir()
-
-    if force_local:
-        # Force local behavior: always attempt to load local CSVs like pre-deploy.
+# Decide source: prefer repo data/ if present
+repo_data_exists = REPO_DATA_DIR.exists() and REPO_DATA_DIR.is_dir()
+if repo_data_exists:
+    try:
+        df = load_csvs_from_dir(str(REPO_DATA_DIR))
+    except Exception as e:
+        st.error(f"リポジトリ内 data/ の読み込みに失敗しました: {e}")
+        df = pd.DataFrame()
+else:
+    # No repo data/: use uploads if provided, otherwise (optionally) use DEFAULT_DIR
+    if uploaded_dfs:
+        df = pd.concat(uploaded_dfs, ignore_index=True)
+    elif force_local:
         try:
-            local_df = load_csvs_from_dir(csv_path)
-            if uploaded_dfs:
-                dfs = [local_df] + uploaded_dfs
-                df = pd.concat(dfs, ignore_index=True)
-            else:
-                df = local_df
+            df = load_csvs_from_dir(DEFAULT_DIR)
         except Exception as e:
-            # If local loading fails, surface the error so user can debug locally.
             st.error(f"ローカルCSVの読み込みに失敗しました: {e}")
             df = pd.DataFrame()
     else:
-        # Default behavior: use uploads if provided; otherwise try local if it exists.
-        if uploaded_dfs:
-            df = pd.concat(uploaded_dfs, ignore_index=True)
-        elif local_exists:
-            df = load_csvs_from_dir(csv_path)
-        else:
-            st.info("デプロイ環境ではローカルのデータディレクトリが見つかりません。\n必要なCSVをアップロードしてください（上部のファイルアップローダーを使用）。")
-except Exception as e:
-    st.error(f"CSVの読み込みに失敗しました: {e}")
-    df = pd.DataFrame()
+        st.info("リポジトリ内に data/ が存在しません。`data/` を作成して CSV を置くか、アップロードしてください。")
+        df = pd.DataFrame()
 
 # DB機能はオプション化しました。CSVを直接操作します。
 

@@ -1,0 +1,7 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+/.DS_Store
+# keep data/ in repo (we want to commit CSVs)
+# data/
