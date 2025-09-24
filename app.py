@@ -18,29 +18,43 @@ csv_path = DEFAULT_DIR
 
 # Allow user to upload one or more CSV files in the deployed app.
 uploaded_files = st.file_uploader('CSVファイルをアップロード（省略可）', type=['csv'], accept_multiple_files=True)
+
+# Option: prefer loading local CSVs from DEFAULT_DIR. If local exists and this is checked,
+# we always load local CSVs. Uploaded files (if any) will be appended after local data.
+force_local = st.checkbox('ローカルのCSVを優先して常に読み込む（存在する場合）', value=True)
+
 df = pd.DataFrame()
+uploaded_dfs = []
 if uploaded_files:
-    dfs = []
     for uf in uploaded_files:
         try:
-            dfs.append(pd.read_csv(uf))
+            uploaded_dfs.append(pd.read_csv(uf))
         except Exception:
             continue
-    if dfs:
-        df = pd.concat(dfs, ignore_index=True)
-else:
-    try:
-        # Only attempt to load CSVs from the DEFAULT_DIR when it actually exists.
-        # On Streamlit Community Cloud the local path won't exist, so prefer user uploads.
-        p = Path(csv_path)
-        if p.exists() and p.is_dir():
+
+try:
+    p = Path(csv_path)
+    local_exists = p.exists() and p.is_dir()
+
+    if force_local and local_exists:
+        # Always load local CSVs when the option is enabled and the dir exists.
+        local_df = load_csvs_from_dir(csv_path)
+        if uploaded_dfs:
+            dfs = [local_df] + uploaded_dfs
+            df = pd.concat(dfs, ignore_index=True)
+        else:
+            df = local_df
+    else:
+        # Default behavior: use uploads if provided; otherwise try local if it exists.
+        if uploaded_dfs:
+            df = pd.concat(uploaded_dfs, ignore_index=True)
+        elif local_exists:
             df = load_csvs_from_dir(csv_path)
         else:
-            # Inform the user in the deployed app that they should upload CSVs.
             st.info("デプロイ環境ではローカルのデータディレクトリが見つかりません。\n必要なCSVをアップロードしてください（上部のファイルアップローダーを使用）。")
-    except Exception as e:
-        st.error(f"CSVの読み込みに失敗しました: {e}")
-        df = pd.DataFrame()
+except Exception as e:
+    st.error(f"CSVの読み込みに失敗しました: {e}")
+    df = pd.DataFrame()
 
 # DB機能はオプション化しました。CSVを直接操作します。
 
