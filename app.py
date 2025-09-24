@@ -9,6 +9,7 @@ import pandas as pd
 from pathlib import Path
 from kakodata_utils import load_csv, load_csvs_from_dir, search_df
 import re # ハイライト表示のために正規表現ライブラリをインポート
+from html import escape # HTMLエスケープのためにインポート
 
 # --- 設定 ---
 # リポジトリのルートからの相対パスとして 'data' ディレクトリを参照します。
@@ -17,6 +18,31 @@ REPO_DATA_DIR = Path('data')
 
 st.set_page_config(page_title="過去問検索", layout="wide")
 st.title("過去問検索ツール")
+
+# --- カスタムCSS ---
+# 生成するHTMLテーブルとハイライト用のスタイルを定義
+st.markdown("""
+<style>
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        border: 1px solid #e0e0e0;
+        padding: 8px;
+        text-align: left;
+        vertical-align: top;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    mark {
+        background-color: #FFF1A2;
+        padding: 0.1em 0.2em;
+        border-radius: 3px;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 
 # --- データ読み込みロジック ---
@@ -137,23 +163,50 @@ else:
         )
 
         # --- ★★★ここを修正しました★★★ ---
-        # ハイライト表示のロジックを安全な方法に変更
-        def highlight_matches(val, search_filters):
-            val_str = str(val)
-            for col, query, mode in search_filters:
-                # 'contains'モードではクエリをエスケープ
-                pattern = re.escape(query) if mode == 'contains' else query
-                try:
-                    if re.search(pattern, val_str, flags=re.IGNORECASE):
-                        return 'background-color: #FFF1A2' # ハイライト色
-                except re.error:
-                    continue # 無効な正規表現は無視
-            return ''
+        # ハイライト表示のロジックを、該当単語のみマークする方法に変更
+        def generate_highlighted_html(df, filters):
+            """検索語にマッチした部分を<mark>タグで囲んだHTMLテーブルを生成する"""
+            # ヘッダーを生成
+            table_html = "<table><thead><tr>"
+            for column in df.columns:
+                table_html += f"<th>{escape(str(column))}</th>"
+            table_html += "</tr></thead><tbody>"
+
+            # 各行を生成
+            for _, row in df.iterrows():
+                table_html += "<tr>"
+                for column in df.columns:
+                    cell_value = str(row[column])
+                    # まずはセル全体を安全にエスケープする
+                    highlighted_cell = escape(cell_value)
+
+                    # この列に関連するフィルターを適用してハイライトする
+                    for f_col, f_query, f_mode in filters:
+                        if f_col == column:
+                            pattern = re.escape(f_query) if f_mode == 'contains' else f_query
+                            try:
+                                # マッチした部分を<mark>タグで囲む
+                                highlighted_cell = re.sub(
+                                    f'({pattern})',
+                                    r'<mark>\1</mark>',
+                                    highlighted_cell,
+                                    flags=re.IGNORECASE
+                                )
+                            except re.error:
+                                continue # 不正な正規表現はスキップ
+
+                    table_html += f"<td>{highlighted_cell}</td>"
+                table_html += "</tr>"
+
+            table_html += "</tbody></table>"
+            return table_html
 
         if st.session_state.do_highlight and filters:
-            # DataFrameのStyler機能を使って安全にハイライトする
-            st.dataframe(res.style.applymap(lambda val: highlight_matches(val, filters)))
+            # カスタムHTMLを生成して表示
+            html_output = generate_highlighted_html(res, filters)
+            st.markdown(html_output, unsafe_allow_html=True)
         else:
+            # ハイライトしない場合は通常のデータフレーム表示
             st.dataframe(res)
 
     # --- データプレビューセクション ---
