@@ -30,8 +30,14 @@ if uploaded_files:
         df = pd.concat(dfs, ignore_index=True)
 else:
     try:
-        if csv_path:
+        # Only attempt to load CSVs from the DEFAULT_DIR when it actually exists.
+        # On Streamlit Community Cloud the local path won't exist, so prefer user uploads.
+        p = Path(csv_path)
+        if p.exists() and p.is_dir():
             df = load_csvs_from_dir(csv_path)
+        else:
+            # Inform the user in the deployed app that they should upload CSVs.
+            st.info("デプロイ環境ではローカルのデータディレクトリが見つかりません。\n必要なCSVをアップロードしてください（上部のファイルアップローダーを使用）。")
     except Exception as e:
         st.error(f"CSVの読み込みに失敗しました: {e}")
         df = pd.DataFrame()
