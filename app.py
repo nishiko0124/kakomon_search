@@ -36,14 +36,19 @@ try:
     p = Path(csv_path)
     local_exists = p.exists() and p.is_dir()
 
-    if force_local and local_exists:
-        # Always load local CSVs when the option is enabled and the dir exists.
-        local_df = load_csvs_from_dir(csv_path)
-        if uploaded_dfs:
-            dfs = [local_df] + uploaded_dfs
-            df = pd.concat(dfs, ignore_index=True)
-        else:
-            df = local_df
+    if force_local:
+        # Force local behavior: always attempt to load local CSVs like pre-deploy.
+        try:
+            local_df = load_csvs_from_dir(csv_path)
+            if uploaded_dfs:
+                dfs = [local_df] + uploaded_dfs
+                df = pd.concat(dfs, ignore_index=True)
+            else:
+                df = local_df
+        except Exception as e:
+            # If local loading fails, surface the error so user can debug locally.
+            st.error(f"ローカルCSVの読み込みに失敗しました: {e}")
+            df = pd.DataFrame()
     else:
         # Default behavior: use uploads if provided; otherwise try local if it exists.
         if uploaded_dfs:
