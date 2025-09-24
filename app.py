@@ -22,15 +22,28 @@ if REPO_DATA_DIR.exists() and REPO_DATA_DIR.is_dir():
     csv_path = str(REPO_DATA_DIR)
 
 # Note: this app now always uses repository `data/` when present.
-st.info('このアプリはリポジトリ内の `data/` を常に使用します。アップロードしたCSVは無視されます。')
+#st.info('このアプリはリポジトリ内の `data/` を常に使用します。アップロードしたCSVは無視されます。')
 
 # Allow user to upload one or more CSV files in the deployed app (uploads are ignored if data/ exists)
-uploaded_files = st.file_uploader('CSVファイルをアップロード（data/ が無ければ代替として使用できます）', type=['csv'], accept_multiple_files=True)
+# The uploader and the "use local DEFAULT_DIR" option were previously commented out by the author
+# to indicate they may be unnecessary. To avoid runtime NameError in deployments while keeping
+# the original intent, we show the uploader / legacy option only when repository `data/` is missing.
+#uploaded_files = st.file_uploader('CSVファイルをアップロード（data/ が無ければ代替として使用できます）', type=['csv'], accept_multiple_files=True)
 
-# Option kept for legacy behavior if you want explicit local fallback, but default is to use data/
-force_local = st.checkbox('リポジトリ内の data/ がない場合、ユーザ指定のローカル DEFAULT_DIR を使う', value=False)
+# Show uploader only when repo data/ is not present; otherwise uploaded_files stays empty and is ignored
+uploaded_files = []
+if not REPO_DATA_DIR.exists() or not REPO_DATA_DIR.is_dir():
+    uploaded_files = st.file_uploader(
+        'CSVファイルをアップロード（data/ が無ければ代替として使用できます）',
+        type=['csv'], accept_multiple_files=True
+    )
 
-force_local = st.checkbox('リポジトリ内の data/ がない場合、ユーザ指定のローカル DEFAULT_DIR を使う', value=False)
+# Legacy checkbox: when true and `data/` is missing, try loading CSVs from DEFAULT_DIR.
+# Kept as a visible checkbox so deployers can opt into using local filesystem CSVs.
+if not REPO_DATA_DIR.exists() or not REPO_DATA_DIR.is_dir():
+    force_local = st.checkbox('リポジトリ内の data/ がない場合、ユーザ指定のローカル DEFAULT_DIR を使う', value=False, key='force_local')
+else:
+    force_local = False
 
 # Prepare uploaded dfs (uploads are fallback only when data/ is missing)
 df = pd.DataFrame()
@@ -79,7 +92,7 @@ do_search = st.button('検索')
 
 st.radio('検索モード', options=['含む', '完全一致'], index=0, key='match_mode')
 st.radio('条件の結合', options=['AND', 'OR'], index=0, key='combine_mode')
-do_highlight = st.checkbox('ハイライト表示', value=True)
+do_highlight = st.checkbox('ハイライト表示', value=True, key='do_highlight')
 
 # カラム自動検出（ユーザが手動で上書き可能）
 
