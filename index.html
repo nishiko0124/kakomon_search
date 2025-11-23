@@ -19,7 +19,7 @@
             font-family: "Inter", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "BIZ UDPGothic", "Meiryo", sans-serif;
             color: #444;
             -webkit-font-smoothing: antialiased;
-            padding-bottom: 80px; /* FABのための余白 */
+            padding-bottom: 80px; 
         }
         
         .main-container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
@@ -105,10 +105,10 @@
             font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            padding: 20px;
+            padding: 15px 20px; /* パディング調整 */
         }
         .table td {
-            padding: 20px;
+            padding: 15px 20px; /* パディング調整 */
             vertical-align: middle;
             border-bottom: 1px solid #edf2f7;
             color: #2d3748;
@@ -124,6 +124,7 @@
             font-weight: 800;
             font-size: 0.9rem;
             display: inline-block;
+            white-space: nowrap; /* ★年度は絶対に改行させない */
         }
 
         /* 追加カード */
@@ -167,7 +168,7 @@
             font-weight: bold;
         }
 
-        /* ▼▼▼ トースト通知 (脱・alert) ▼▼▼ */
+        /* トースト通知 */
         .toast-container {
             position: fixed;
             top: 20px;
@@ -195,62 +196,39 @@
         .custom-toast.error { background: #ef4444; }
 
 
-        /* ▼▼▼ スマホ用カード型レイアウト (これが魔法です！) ▼▼▼ */
+        /* ▼▼▼ スマホ最適化（リスト形式を維持しつつ調整） ▼▼▼ */
         @media (max-width: 576px) {
-            .main-container { padding: 20px 15px; }
-            .app-title { font-size: 1.8rem; }
+            .main-container { padding: 20px 10px; } /* 左右の余白を減らす */
+            .app-title { font-size: 1.6rem; }
             
-            /* テーブルのヘッダーを隠す */
-            .table thead { display: none; }
-            
-            /* 行をカードに変身させる */
-            .table-row {
-                display: block;
-                background: #fff;
-                border-radius: 15px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-                margin-bottom: 12px;
-                padding: 15px;
-                border: 1px solid #f1f5f9;
-                position: relative;
-            }
-            
-            /* セルのスタイル解除と再配置 */
-            .table td {
-                display: block;
-                padding: 2px 0;
-                border: none;
-                text-align: left;
-            }
-            
-            /* 年度は左上にバッジとして配置 */
-            .td-year {
-                margin-bottom: 5px;
-            }
-            
-            /* 科目は太字で大きく */
-            .td-subject {
-                font-size: 1.1rem;
-                font-weight: 800 !important;
-                color: #1e293b;
-                line-height: 1.4;
-            }
-            
-            /* 教員名は少し控えめに */
-            .td-teacher {
-                font-size: 0.9rem;
-                color: #64748b;
-                display: flex;
-                align-items: center;
-            }
-            .td-teacher::before {
-                content: "👤 "; /* アイコンをつける */
-                margin-right: 4px;
-                opacity: 0.6;
+            /* テーブルの余白をギュッと詰める */
+            .table th, .table td {
+                padding: 10px 8px; /* パディングをかなり小さく */
+                font-size: 0.85rem; /* 文字サイズを少し小さく */
             }
 
-            .table-card { background: transparent; box-shadow: none; border-radius: 0; }
-            .table { background: transparent; }
+            /* 年度の列：改行禁止＆幅を最小限に */
+            .td-year {
+                white-space: nowrap;
+                width: 1%; /* 必要最小限の幅にする */
+            }
+            .year-badge {
+                padding: 4px 8px; /* バッジも少し小さく */
+                font-size: 0.8rem;
+            }
+
+            /* 科目：メインなので太字 */
+            .td-subject {
+                font-weight: 600;
+                /* 必要ならここで改行を許可 */
+                word-break: break-all; 
+            }
+
+            /* 教員：少し小さくしてスペース節約 */
+            .td-teacher {
+                font-size: 0.8rem;
+                color: #666;
+            }
         }
     </style>
 </head>
@@ -366,7 +344,6 @@
     const tbody = document.getElementById('resultBody');
     const noResultDiv = document.getElementById('noResult');
 
-    // ★トースト表示関数
     function showToast(msg, isError = false) {
         const toast = document.getElementById('toast');
         const toastMsg = document.getElementById('toastMsg');
@@ -438,7 +415,6 @@
 
             const tr = document.createElement('tr');
             tr.className = 'table-row';
-            // クラス名(td-xxx)をつけて、CSSでスマホ表示を制御する
             tr.innerHTML = `
                 <td class="text-center td-year"><span class="year-badge">${year}</span></td>
                 <td class="td-subject">${subject}</td>
@@ -473,7 +449,6 @@
         document.getElementById('addFormBulk').style.display = mode === 'single' ? 'none' : 'block';
     }
 
-    // 1件送信
     document.getElementById('addFormSingle').addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
@@ -487,7 +462,6 @@
         await sendData(e.target, btn, Object.fromEntries(formData.entries()));
     });
 
-    // 一括送信
     document.getElementById('addFormBulk').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('submitBtnBulk');
@@ -539,7 +513,7 @@
 
         let msg = `${lines.length}件中、${successCount}件登録`;
         if(skipCount > 0) msg += ` (${skipCount}件重複スキップ)`;
-        showToast(msg); // ここもトーストに変更
+        showToast(msg); 
 
         btn.innerText = '一括登録';
         btn.disabled = false;
@@ -561,7 +535,7 @@
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' }
             });
-            showToast("登録しました！"); // alertをやめてトーストに
+            showToast("登録しました！"); 
             form.reset();
             toggleAddForm();
             setTimeout(loadData, 2000);
