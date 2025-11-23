@@ -7,63 +7,137 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
-        body { background-color: #f0f2f5; font-family: "Helvetica Neue", Arial, sans-serif; }
-        .main-container { max-width: 800px; margin: 0 auto; padding: 20px; }
-        .search-card { border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .add-card { border: none; border-radius: 15px; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: none; }
-        .table-row { transition: all 0.2s; }
-        .table-row:hover { background-color: #f8f9fa; }
-        .fab-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 30px; font-size: 24px; box-shadow: 0 4px 10px rgba(0,123,255,0.4); z-index: 1000; }
+        /* 全体のフォントをスッキリさせる */
+        body {
+            background-color: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #333;
+        }
+        .main-container { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+        /* 検索バーのデザイン：余裕を持たせて浮かせる */
+        .search-container {
+            position: sticky;
+            top: 10px;
+            z-index: 100;
+            background: rgba(248, 249, 250, 0.9); /* 背景が透けないように */
+            padding-bottom: 10px;
+            border-radius: 15px;
+        }
+        .search-box {
+            border: none;
+            border-radius: 50px; /* 丸っこく */
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08); /* ふんわり影 */
+            padding: 15px 25px;
+            font-size: 1.1rem;
+            background-color: #fff;
+        }
+        .search-box:focus {
+            box-shadow: 0 4px 25px rgba(13,110,253,0.15);
+            outline: none;
+        }
+
+        /* テーブルのデザイン：太字をやめてスッキリと */
+        .table-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            background: #fff;
+            overflow: hidden;
+        }
+        .table th {
+            background-color: #fff;
+            border-bottom: 2px solid #f0f0f0;
+            color: #888;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 15px;
+        }
+        .table td {
+            padding: 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f5f5f5;
+            font-weight: 400; /* 太字解除 */
+            color: #444;
+        }
+        .table-row:hover { background-color: #fcfcfc; }
+
+        /* 追加カード */
+        .add-card {
+            border: none;
+            border-radius: 15px;
+            background: #fff;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            display: none;
+            margin-bottom: 30px;
+        }
+
+        /* プラスボタン */
+        .fab-btn {
+            position: fixed; bottom: 30px; right: 30px;
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            font-size: 24px;
+            box-shadow: 0 4px 15px rgba(0,123,255,0.3);
+            z-index: 1000;
+            border: none;
+        }
     </style>
 </head>
 <body>
 
 <div class="main-container">
-    <h2 class="text-center mb-4 fw-bold text-primary"><i class="bi bi-journal-bookmark-fill"></i> 過去問DB</h2>
+    <div class="text-center mb-4">
+        <h2 class="fw-bold text-dark" style="letter-spacing: 0.05em;"><i class="bi bi-journal-text text-primary"></i> 過去問DB</h2>
+    </div>
 
-    <div id="addSection" class="add-card p-4 mb-4">
-        <h5 class="mb-3 fw-bold text-success"><i class="bi bi-plus-circle-fill"></i> 新しい過去問を追加</h5>
+    <div id="addSection" class="add-card p-4">
+        <h5 class="mb-4 fw-bold text-dark"><i class="bi bi-pencil-square"></i> 新しい過去問を追加</h5>
         <form id="addForm">
             <div class="row g-3">
                 <div class="col-md-3">
-                    <input type="number" name="year" class="form-control" placeholder="年度 (2024)" required>
+                    <label class="form-label small text-muted">年度</label>
+                    <input type="number" name="year" class="form-control" placeholder="2024" required>
                 </div>
                 <div class="col-md-5">
+                    <label class="form-label small text-muted">科目名</label>
                     <input type="text" name="subject" class="form-control" placeholder="科目名" required>
                 </div>
                 <div class="col-md-4">
+                    <label class="form-label small text-muted">教員名</label>
                     <input type="text" name="teacher" class="form-control" placeholder="教員名">
                 </div>
-                <div class="col-12 text-end">
-                    <button type="button" class="btn btn-secondary me-2" onclick="toggleAddForm()">閉じる</button>
-                    <button type="submit" class="btn btn-success px-4" id="submitBtn">登録する</button>
+                <div class="col-12 text-end mt-4">
+                    <button type="button" class="btn btn-light me-2" onclick="toggleAddForm()">キャンセル</button>
+                    <button type="submit" class="btn btn-primary px-4" id="submitBtn">登録</button>
                 </div>
             </div>
         </form>
     </div>
 
-    <div class="search-card bg-white p-4 mb-4">
-        <div class="input-group input-group-lg">
-            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-            <input type="text" id="searchInput" class="form-control border-start-0" placeholder="科目、教員、年度で検索...">
+    <div class="search-container">
+        <div class="position-relative">
+            <input type="text" id="searchInput" class="form-control search-box" placeholder="キーワードを入力 (例: 民法 田中)">
+            <i class="bi bi-search position-absolute text-muted" style="right: 20px; top: 18px;"></i>
         </div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <span id="count" class="text-muted small">読み込み中...</span>
-        <div id="loadingSpinner" class="spinner-border text-primary spinner-border-sm" role="status"></div>
+    <div class="d-flex justify-content-end align-items-center mb-2 px-2">
+        <div id="loadingSpinner" class="spinner-border text-primary spinner-border-sm me-2" role="status" style="display:none;"></div>
+        <span id="count" class="text-secondary small">-- 件</span>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-        <table class="table table-hover mb-0">
-            <thead class="table-light">
+    <div class="table-card">
+        <table class="table mb-0">
+            <thead>
                 <tr>
                     <th width="15%">年度</th>
                     <th width="45%">科目名</th>
                     <th width="40%">教員名</th>
                 </tr>
             </thead>
-            <tbody id="resultBody"></tbody>
+            <tbody id="resultBody">
+                </tbody>
         </table>
     </div>
 </div>
@@ -75,14 +149,14 @@
 <script>
     // ▼▼▼ 設定エリア ▼▼▼
 
-    // 1. 【ここだけ修正必要！】GASのデプロイURL（末尾が /exec のもの）
-    const GAS_URL = 'https://script.google.com/macros/library/d/1KVXdYMpeOr4AaGUY8Z6UBE80AI4dnQc1Vg6vv8H1aHRsQ65j0K7_MD2o/1';
+    // 1. 【ここを修正してください！】 GASのデプロイURL (/execで終わるやつ)
+    // 今のURL(.../library/...)は間違いです！修正しないと追加ボタンが動きません。
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzwMX2VOnzGNW_oM8PjMqd6aVHY8r_szMLiMEgdx9Ugme420HCvNdOx635At_fitTQl2A/exec'; 
 
-    // 2. あなたの正しいCSV URL（入力済み！）
+    // 2. CSV URL (これはOK)
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnletGVlj53bq-YG9G1NM0jXyWZYsT_0D5O6iIpnbGGtiIbItaZexEvyeJ8xgAhkpuRm2fxHYjRuce/pub?gid=0&single=true&output=csv';
 
     // ▲▲▲ 設定エリアここまで ▲▲▲
-
 
     let allData = [];
     const tbody = document.getElementById('resultBody');
@@ -94,13 +168,11 @@
             const res = await fetch(CSV_URL);
             const text = await res.text();
             const rows = text.split('\n').map(r => r.split(','));
-
-            // 1行目はヘッダーとして除外
             allData = rows.slice(1).filter(r => r.length > 1);
             renderTable(allData);
         } catch (e) {
             console.error(e);
-            alert("データの読み込みに失敗しました。GitHub Pages上で確認してください。");
+            alert("読み込みエラー");
         } finally {
             document.getElementById('loadingSpinner').style.display = 'none';
         }
@@ -109,47 +181,62 @@
     // テーブル描画
     function renderTable(data) {
         tbody.innerHTML = '';
-        document.getElementById('count').innerText = `${data.length} 件見つかりました`;
+        document.getElementById('count').innerText = `${data.length} 件`;
 
         data.forEach(row => {
-            // 列の定義（スプレッドシートに合わせて調整）
-            // A列[0]=タイムスタンプ, B列[1]=年度, C列[2]=科目, D列[3]=教員
+            // スプレッドシートの列定義 (A列を空けた前提で 1, 2, 3)
             const year = row[1] || "";
             const subject = row[2] || "";
             const teacher = row[3] || "";
 
-            // もし「年度」が表示されず「日付」が出る場合は、row[0], row[1]... に戻してください
-
             const tr = document.createElement('tr');
             tr.className = 'table-row';
+            // 太字(fw-bold)を削除し、色味を少し調整
             tr.innerHTML = `
-                <td class="fw-bold text-primary">${year}</td>
-                <td class="fw-bold">${subject}</td>
+                <td class="text-primary">${year}</td>
+                <td style="font-weight: 500;">${subject}</td>
                 <td class="text-muted">${teacher}</td>
             `;
             tbody.appendChild(tr);
         });
     }
 
-    // 検索機能
+    // ★検索機能の強化（スペース区切りでAND検索）
     document.getElementById('searchInput').addEventListener('input', (e) => {
-        const term = e.target.value.toLowerCase();
-        const filtered = allData.filter(row => row.some(col => col && col.toLowerCase().includes(term)));
+        const inputVal = e.target.value.toLowerCase();
+
+        // 全角スペースを半角に変換して、スペースで単語に分割する
+        const keywords = inputVal.replace(/　/g, ' ').split(' ').filter(k => k !== "");
+
+        const filtered = allData.filter(row => {
+            // その行の全データを1つの文字列にする
+            const rowString = row.join(' ').toLowerCase();
+
+            // すべてのキーワードが含まれているかチェック (AND検索)
+            return keywords.every(word => rowString.includes(word));
+        });
+
         renderTable(filtered);
     });
 
     // フォーム開閉
     function toggleAddForm() {
         const formDiv = document.getElementById('addSection');
-        formDiv.style.display = (formDiv.style.display === 'none' || formDiv.style.display === '') ? 'block' : 'none';
-        if(formDiv.style.display === 'block') window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (formDiv.style.display === 'block') {
+            formDiv.style.display = 'none';
+        } else {
+            formDiv.style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     }
 
     // 送信処理
     document.getElementById('addForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (GAS_URL.includes('xxxxxxxx')) {
-            alert('エラー: GAS_URLが設定されていません！コード内のURLを書き換えてください。');
+
+        // URLチェック
+        if (GAS_URL.includes('library') || GAS_URL.includes('xxxx')) {
+            alert('【設定エラー】GASのURLが正しくありません。コード内のGAS_URLを「/exec」で終わるURLに書き換えてください。');
             return;
         }
 
@@ -171,7 +258,7 @@
             alert("登録しました！");
             e.target.reset();
             toggleAddForm();
-            setTimeout(loadData, 2000); // 2秒後に再読み込み
+            setTimeout(loadData, 2000);
         } catch (err) {
             alert("送信失敗: " + err);
         } finally {
