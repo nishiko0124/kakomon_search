@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>過去問検索システム</title>
+    
+    <link rel="icon" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
@@ -12,11 +15,10 @@
     <style>
         /* ▼▼▼ こだわりのフォント設定 ▼▼▼ */
         body { 
-            background-color: #f4f7f6; /* 少し青みがかった清潔なグレー */
-            /* Macはヒラギノ、WinはBIZ UDPやメイリオ、英語はInter */
+            background-color: #f4f7f6; 
             font-family: "Inter", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "BIZ UDPGothic", "Meiryo", sans-serif;
             color: #444;
-            -webkit-font-smoothing: antialiased; /* 文字を滑らかに */
+            -webkit-font-smoothing: antialiased;
         }
         
         .main-container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
@@ -26,7 +28,6 @@
             font-weight: 800;
             font-size: 2.2rem;
             letter-spacing: -0.05em;
-            /* 文字にグラデーションをかける */
             background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -41,21 +42,21 @@
             margin-top: 5px;
         }
 
-        /* 検索バー（すりガラス風） */
+        /* 検索バー */
         .search-container {
             position: sticky;
-            top: 20px;
+            top: 10px; /* スマホで見やすいよう少し上に調整 */
             z-index: 100;
-            background: rgba(244, 247, 246, 0.85); /* 背景色に合わせて透過 */
-            backdrop-filter: blur(10px); /* すりガラス効果 */
-            padding: 15px 0;
+            background: rgba(244, 247, 246, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 10px 0;
             margin-bottom: 10px;
         }
         .search-box {
             border: 2px solid transparent;
             border-radius: 16px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            padding: 15px 25px 15px 50px; /* アイコン分の左余白 */
+            padding: 15px 25px 15px 50px;
             font-size: 1.05rem;
             background-color: #fff;
             transition: all 0.3s ease;
@@ -67,7 +68,7 @@
         }
         .search-icon {
             position: absolute;
-            left: 25px;
+            left: 20px;
             top: 50%;
             transform: translateY(-50%);
             color: #a0aec0;
@@ -75,17 +76,17 @@
             pointer-events: none;
         }
 
-        /* ソート選択プルダウン */
         .sort-select {
             border: none;
             border-radius: 16px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            padding: 0 20px;
+            padding: 0 15px;
             height: 58px;
             background-color: #fff;
             cursor: pointer;
             font-weight: 600;
             color: #555;
+            font-size: 0.9rem;
         }
 
         /* テーブルカード */
@@ -111,7 +112,6 @@
             border-bottom: 1px solid #edf2f7;
             color: #2d3748;
         }
-        .table-row { transition: background-color 0.2s; }
         .table-row:hover { background-color: #f8fafc; }
 
         /* 年度バッジ */
@@ -122,6 +122,8 @@
             border-radius: 8px;
             font-weight: 700;
             font-size: 0.9rem;
+            display: inline-block;
+            white-space: nowrap; /* ★これが重要！年度を絶対に改行させない */
         }
 
         /* 追加カード */
@@ -134,8 +136,6 @@
             margin-bottom: 30px;
             border: 1px solid #edf2f7;
         }
-        
-        /* まとめて追加用のテキストエリア */
         .bulk-textarea {
             font-family: "Menlo", "Monaco", monospace;
             font-size: 0.9rem;
@@ -144,7 +144,7 @@
             border-radius: 12px;
         }
 
-        /* フローティングアクションボタン（右下） */
+        /* フローティングボタン */
         .fab-btn { 
             position: fixed; bottom: 30px; right: 30px; 
             width: 60px; height: 60px; 
@@ -156,19 +156,40 @@
             color: white;
             font-size: 28px;
             transition: transform 0.2s;
-            display: flex; /* 中央揃えのため */
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
         }
         .fab-btn:hover { transform: scale(1.05); }
         .fab-btn:active { transform: scale(0.95); }
 
-        /* モード切替ボタンのカスタム */
         .btn-check:checked + .btn-outline-primary {
             background-color: #ebf8ff;
             color: #2563eb;
             border-color: #2563eb;
             font-weight: bold;
+        }
+
+        /* ▼▼▼ スマホ用レスポンシブ対応 (ここを追加しました！) ▼▼▼ */
+        @media (max-width: 576px) {
+            .main-container { padding: 20px 15px; } /* 全体の余白を減らす */
+            
+            .app-title { font-size: 1.8rem; } /* タイトルを少し小さく */
+            
+            /* 検索バーの高さを調整 */
+            .search-box { height: 50px; padding: 10px 15px 10px 40px; font-size: 1rem; }
+            .sort-select { height: 50px; padding: 0 10px; font-size: 0.85rem; }
+            .search-icon { left: 15px; font-size: 1rem; }
+
+            /* テーブルの余白を限界まで削る */
+            .table th, .table td {
+                padding: 12px 8px; /* パディングを減らす */
+                font-size: 0.9rem; /* 文字を少し小さく */
+            }
+            
+            /* 年度の列を最小限に */
+            .year-badge {
+                padding: 3px 6px;
+                font-size: 0.8rem;
+            }
         }
     </style>
 </head>
@@ -251,9 +272,9 @@
         <table class="table mb-0">
             <thead>
                 <tr>
-                    <th width="15%" class="text-center">YEAR</th>
-                    <th width="45%">SUBJECT</th>
-                    <th width="40%">TEACHER</th>
+                    <th class="text-center" style="white-space: nowrap;">YEAR</th>
+                    <th>SUBJECT</th>
+                    <th>TEACHER</th>
                 </tr>
             </thead>
             <tbody id="resultBody"></tbody>
@@ -266,7 +287,7 @@
 </button>
 
 <script>
-    // ▼▼▼ 設定エリア (ここを書き換えてください！) ▼▼▼
+    // ▼▼▼ 設定エリア (あなたの設定を維持しています！) ▼▼▼
     
     // 1. GAS URL
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbzwMX2VOnzGNW_oM8PjMqd6aVHY8r_szMLiMEgdx9Ugme420HCvNdOx635At_fitTQl2A/exec';
