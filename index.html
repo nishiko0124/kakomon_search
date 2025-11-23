@@ -237,7 +237,7 @@
 <div class="toast-container">
     <div id="toast" class="custom-toast">
         <i class="bi bi-check-circle-fill text-success"></i>
-        <span id="toastMsg">登録しました</span>
+        <span id="toastMsg">登録しました！</span>
     </div>
 </div>
 
@@ -295,11 +295,11 @@
         <div class="row g-2 align-items-center">
             <div class="col-8 position-relative">
                 <i class="bi bi-search search-icon"></i>
-                <input type="text" id="searchInput" class="form-control search-box" placeholder="キーワード (例：民法 佐藤)" autocomplete="off">
+                <input type="text" id="searchInput" class="form-control search-box" placeholder="さがす (例：民法 佐藤)" autocomplete="off">
             </div>
             <div class="col-4">
                 <select id="sortSelect" class="form-select sort-select">
-                    <option value="desc">新着順</option>
+                    <option value="desc">新しい順</option>
                     <option value="asc">古い順</option>
                 </select>
             </div>
@@ -323,8 +323,7 @@
             <tbody id="resultBody"></tbody>
         </table>
         <div id="noResult" class="text-center py-5" style="display:none;">
-            <div style="font-size: 3rem;">🤔</div>
-            <p class="text-muted mt-2 fw-bold">見つかりませんでした</p>
+            <p class="text-muted mt-2 fw-bold">見つからないみたいです。</p>
         </div>
     </div>
 </div>
