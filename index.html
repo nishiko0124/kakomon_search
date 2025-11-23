@@ -3,151 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>過去問検索 & 追加</title>
+    <title>過去問検索システム</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
     <style>
-        /* 全体のフォント設定 */
+        /* ▼▼▼ こだわりのフォント設定 ▼▼▼ */
         body { 
-            background-color: #f8f9fa; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            color: #333;
+            background-color: #f4f7f6; /* 少し青みがかった清潔なグレー */
+            /* Macはヒラギノ、WinはBIZ UDPやメイリオ、英語はInter */
+            font-family: "Inter", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "BIZ UDPGothic", "Meiryo", sans-serif;
+            color: #444;
+            -webkit-font-smoothing: antialiased; /* 文字を滑らかに */
         }
-        .main-container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        
+        .main-container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
 
-        /* 検索バー */
+        /* タイトルロゴデザイン */
+        .app-title {
+            font-weight: 800;
+            font-size: 2.2rem;
+            letter-spacing: -0.05em;
+            /* 文字にグラデーションをかける */
+            background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+        .app-subtitle {
+            font-size: 0.8rem;
+            color: #8898aa;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        /* 検索バー（すりガラス風） */
         .search-container {
             position: sticky;
-            top: 10px;
+            top: 20px;
             z-index: 100;
-            background: rgba(248, 249, 250, 0.95);
-            padding: 10px 0;
-            border-radius: 15px;
+            background: rgba(244, 247, 246, 0.85); /* 背景色に合わせて透過 */
+            backdrop-filter: blur(10px); /* すりガラス効果 */
+            padding: 15px 0;
+            margin-bottom: 10px;
         }
         .search-box {
-            border: none;
-            border-radius: 50px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            padding: 15px 25px;
-            font-size: 1.1rem;
+            border: 2px solid transparent;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            padding: 15px 25px 15px 50px; /* アイコン分の左余白 */
+            font-size: 1.05rem;
             background-color: #fff;
+            transition: all 0.3s ease;
         }
         .search-box:focus {
-            box-shadow: 0 4px 25px rgba(13,110,253,0.15);
             outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 4px 25px rgba(37, 99, 235, 0.15);
         }
-        .sort-select {
-            border: none;
-            border-radius: 50px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            padding: 0 20px;
-            height: 58px; 
-            background-color: #fff;
-            cursor: pointer;
+        .search-icon {
+            position: absolute;
+            left: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            font-size: 1.2rem;
+            pointer-events: none;
         }
 
-        /* テーブル */
+        /* ソート選択プルダウン */
+        .sort-select {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            padding: 0 20px;
+            height: 58px;
+            background-color: #fff;
+            cursor: pointer;
+            font-weight: 600;
+            color: #555;
+        }
+
+        /* テーブルカード */
         .table-card {
             border: none;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.03);
             background: #fff;
             overflow: hidden;
         }
         .table th {
             background-color: #fff;
-            border-bottom: 2px solid #f0f0f0;
-            color: #888;
-            font-weight: 600;
-            padding: 15px;
+            border-bottom: 2px solid #edf2f7;
+            color: #718096;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 20px;
         }
         .table td {
-            padding: 15px;
+            padding: 20px;
             vertical-align: middle;
-            border-bottom: 1px solid #f5f5f5;
-            color: #444;
+            border-bottom: 1px solid #edf2f7;
+            color: #2d3748;
         }
-        .table-row:hover { background-color: #fcfcfc; }
+        .table-row { transition: background-color 0.2s; }
+        .table-row:hover { background-color: #f8fafc; }
+
+        /* 年度バッジ */
+        .year-badge {
+            background-color: #ebf8ff;
+            color: #2b6cb0;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
 
         /* 追加カード */
         .add-card { 
             border: none; 
-            border-radius: 15px; 
+            border-radius: 20px; 
             background: #fff; 
-            box-shadow: 0 8px 30px rgba(0,0,0,0.1); 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08); 
             display: none; 
             margin-bottom: 30px;
+            border: 1px solid #edf2f7;
         }
         
+        /* まとめて追加用のテキストエリア */
         .bulk-textarea {
-            font-family: monospace;
+            font-family: "Menlo", "Monaco", monospace;
             font-size: 0.9rem;
-            background-color: #fdfdfd;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
         }
 
-        /* プラスボタン */
+        /* フローティングアクションボタン（右下） */
         .fab-btn { 
             position: fixed; bottom: 30px; right: 30px; 
-            width: 56px; height: 56px; 
+            width: 60px; height: 60px; 
             border-radius: 50%; 
-            font-size: 24px; 
-            box-shadow: 0 4px 15px rgba(0,123,255,0.3); 
+            background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4); 
             z-index: 1000; 
             border: none;
+            color: white;
+            font-size: 28px;
+            transition: transform 0.2s;
+            display: flex; /* 中央揃えのため */
+            align-items: center;
+            justify-content: center;
+        }
+        .fab-btn:hover { transform: scale(1.05); }
+        .fab-btn:active { transform: scale(0.95); }
+
+        /* モード切替ボタンのカスタム */
+        .btn-check:checked + .btn-outline-primary {
+            background-color: #ebf8ff;
+            color: #2563eb;
+            border-color: #2563eb;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
 <div class="main-container">
-    <div class="text-center mb-4">
-        <h2 class="fw-bold text-dark" style="letter-spacing: 0.05em;"><i class="bi bi-journal-text text-primary"></i> 過去問DB</h2>
+    <div class="text-center mb-5">
+        <div class="app-subtitle">PAST EXAM DATABASE</div>
+        <h1 class="app-title">過去問検索システム</h1>
     </div>
 
-    <div id="addSection" class="add-card p-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="fw-bold text-dark m-0"><i class="bi bi-pencil-square"></i> 過去問を追加</h5>
+    <div id="addSection" class="add-card p-4 p-md-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold m-0" style="color: #2d3748;"><i class="bi bi-pencil-square me-2"></i>データを追加</h5>
             <div class="btn-group" role="group">
                 <input type="radio" class="btn-check" name="addMode" id="modeSingle" autocomplete="off" checked onclick="switchAddMode('single')">
-                <label class="btn btn-outline-primary btn-sm" for="modeSingle">1件ずつ</label>
+                <label class="btn btn-outline-primary btn-sm px-3" for="modeSingle">1件</label>
                 <input type="radio" class="btn-check" name="addMode" id="modeBulk" autocomplete="off" onclick="switchAddMode('bulk')">
-                <label class="btn btn-outline-primary btn-sm" for="modeBulk">まとめて(CSV)</label>
+                <label class="btn btn-outline-primary btn-sm px-3" for="modeBulk">一括(CSV)</label>
             </div>
         </div>
 
         <form id="addFormSingle">
-            <div class="row g-3">
+            <div class="row g-4">
                 <div class="col-md-3">
-                    <label class="form-label small text-muted">年度</label>
-                    <input type="number" name="year" class="form-control" placeholder="2024" required>
+                    <label class="form-label small text-muted fw-bold">年度</label>
+                    <input type="number" name="year" class="form-control form-control-lg" placeholder="2024" required style="border-radius: 12px;">
                 </div>
                 <div class="col-md-5">
-                    <label class="form-label small text-muted">科目名</label>
-                    <input type="text" name="subject" class="form-control" placeholder="科目名" required>
+                    <label class="form-label small text-muted fw-bold">科目名</label>
+                    <input type="text" name="subject" class="form-control form-control-lg" placeholder="科目名" required style="border-radius: 12px;">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label small text-muted">教員名</label>
-                    <input type="text" name="teacher" class="form-control" placeholder="教員名">
+                    <label class="form-label small text-muted fw-bold">教員名</label>
+                    <input type="text" name="teacher" class="form-control form-control-lg" placeholder="教員名" style="border-radius: 12px;">
                 </div>
-                <div class="col-12 text-end mt-3">
-                    <button type="button" class="btn btn-light me-2" onclick="toggleAddForm()">閉じる</button>
-                    <button type="submit" class="btn btn-primary px-4" id="submitBtnSingle">登録</button>
+                <div class="col-12 text-end mt-4">
+                    <button type="button" class="btn btn-light me-2 rounded-pill px-4" onclick="toggleAddForm()">キャンセル</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold" id="submitBtnSingle" style="background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%); border:none;">登録</button>
                 </div>
             </div>
         </form>
 
         <form id="addFormBulk" style="display:none;">
             <div class="mb-3">
-                <label class="form-label small text-muted">CSV形式で貼り付け (重複は自動でスキップされます)</label>
-                <textarea id="bulkInput" class="form-control bulk-textarea" rows="5" placeholder="2024,民法,田中&#13;&#10;2023,憲法,鈴木" required></textarea>
-                <div class="form-text">カンマ(,) または タブ区切りに対応。</div>
+                <label class="form-label small text-muted fw-bold">CSV貼り付け (重複はスキップします)</label>
+                <textarea id="bulkInput" class="form-control bulk-textarea" rows="6" placeholder="2024,民法,田中&#13;&#10;2023,憲法,鈴木" required></textarea>
             </div>
             <div class="text-end">
-                <button type="button" class="btn btn-light me-2" onclick="toggleAddForm()">閉じる</button>
-                <button type="submit" class="btn btn-success px-4" id="submitBtnBulk">一括登録</button>
+                <button type="button" class="btn btn-light me-2 rounded-pill px-4" onclick="toggleAddForm()">キャンセル</button>
+                <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold" id="submitBtnBulk">一括登録</button>
             </div>
-            <div id="bulkProgress" class="progress mt-3" style="display:none; height: 5px;">
-                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+            <div id="bulkProgress" class="progress mt-3 rounded-pill" style="display:none; height: 6px;">
+                <div class="progress-bar bg-info" role="progressbar" style="width: 0%"></div>
             </div>
         </form>
     </div>
@@ -155,30 +229,30 @@
     <div class="search-container">
         <div class="row g-2 align-items-center">
             <div class="col-9 col-md-10 position-relative">
-                <input type="text" id="searchInput" class="form-control search-box" placeholder="キーワード (例: 民法 田中)" autocomplete="off">
-                <i class="bi bi-search position-absolute text-muted" style="right: 25px; top: 18px;"></i>
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" id="searchInput" class="form-control search-box" placeholder="キーワード検索 (例: 民法 田中)" autocomplete="off">
             </div>
             <div class="col-3 col-md-2">
                 <select id="sortSelect" class="form-select sort-select">
-                    <option value="desc">新しい順</option>
+                    <option value="desc">新着順</option>
                     <option value="asc">古い順</option>
                 </select>
             </div>
         </div>
     </div>
 
-    <div class="d-flex justify-content-end align-items-center mb-2 px-2">
+    <div class="d-flex justify-content-end align-items-center mb-3 px-2">
         <div id="loadingSpinner" class="spinner-border text-primary spinner-border-sm me-2" role="status" style="display:none;"></div>
-        <span id="count" class="text-secondary small">-- 件</span>
+        <span id="count" class="small fw-bold text-muted" style="letter-spacing: 0.05em;">-- ITEMS</span>
     </div>
 
     <div class="table-card">
         <table class="table mb-0">
             <thead>
                 <tr>
-                    <th width="15%">年度</th>
-                    <th width="45%">科目名</th>
-                    <th width="40%">教員名</th>
+                    <th width="15%" class="text-center">YEAR</th>
+                    <th width="45%">SUBJECT</th>
+                    <th width="40%">TEACHER</th>
                 </tr>
             </thead>
             <tbody id="resultBody"></tbody>
@@ -186,16 +260,19 @@
     </div>
 </div>
 
-<button class="btn btn-primary fab-btn" onclick="toggleAddForm()">
+<button class="fab-btn" onclick="toggleAddForm()">
     <i class="bi bi-plus-lg"></i>
 </button>
 
 <script>
-    // ▼▼▼ 設定エリア ▼▼▼
+    // ▼▼▼ 設定エリア (ここを書き換えてください！) ▼▼▼
+    
+    // 1. GAS URL
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbzwMX2VOnzGNW_oM8PjMqd6aVHY8r_szMLiMEgdx9Ugme420HCvNdOx635At_fitTQl2A/exec';
 
-    // 2. CSV URL (入力済み)
+    // 2. CSV URL
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnletGVlj53bq-YG9G1NM0jXyWZYsT_0D5O6iIpnbGGtiIbItaZexEvyeJ8xgAhkpuRm2fxHYjRuce/pub?gid=0&single=true&output=csv';
+
     // ▲▲▲ 設定エリアここまで ▲▲▲
 
     let allData = [];
@@ -210,6 +287,7 @@
             const text = await res.text();
             const rows = text.split('\n').map(r => r.split(','));
             allData = rows.slice(1).filter(r => r.length > 1);
+            
             filterAndSort(); 
         } catch (e) {
             console.error(e);
@@ -222,18 +300,24 @@
     // フィルタ & ソート
     function filterAndSort() {
         const inputVal = document.getElementById('searchInput').value.toLowerCase();
-        const sortMode = document.getElementById('sortSelect').value;
+        const sortMode = document.getElementById('sortSelect').value; 
 
+        // 検索
         const keywords = inputVal.replace(/　/g, ' ').split(' ').filter(k => k !== "");
         filteredData = allData.filter(row => {
             const rowString = row.join(' ').toLowerCase();
             return keywords.every(word => rowString.includes(word));
         });
 
+        // ソート
         filteredData.sort((a, b) => {
             const yearA = parseInt(a[1]) || 0;
             const yearB = parseInt(b[1]) || 0;
-            return sortMode === 'desc' ? yearB - yearA : yearA - yearB;
+            if (sortMode === 'desc') {
+                return yearB - yearA; 
+            } else {
+                return yearA - yearB; 
+            }
         });
 
         renderTable(filteredData);
@@ -242,7 +326,7 @@
     // テーブル描画
     function renderTable(data) {
         tbody.innerHTML = '';
-        document.getElementById('count').innerText = `${data.length} 件`;
+        document.getElementById('count').innerText = `${data.length} ITEMS`;
 
         data.forEach(row => {
             const year = row[1] || "";
@@ -252,29 +336,27 @@
             const tr = document.createElement('tr');
             tr.className = 'table-row';
             tr.innerHTML = `
-                <td class="text-primary fw-bold">${year}</td>
-                <td style="font-weight: 500;">${subject}</td>
+                <td class="text-center"><span class="year-badge">${year}</span></td>
+                <td class="fw-bold text-dark">${subject}</td>
                 <td class="text-muted">${teacher}</td>
             `;
             tbody.appendChild(tr);
         });
     }
 
-    // ★重複チェック関数 (重要！)
+    // 重複チェック
     function isDuplicate(year, subject, teacher) {
-        // 全データの中から、年度・科目・教員がすべて一致するものを探す
         return allData.some(row => {
             const dbYear = (row[1] || "").toString().trim();
             const dbSubj = (row[2] || "").toString().trim();
             const dbTeach = (row[3] || "").toString().trim();
-            
             return dbYear === year.toString().trim() &&
                    dbSubj === subject.toString().trim() &&
                    dbTeach === teacher.toString().trim();
         });
     }
 
-    // イベントリスナー
+    // イベント
     document.getElementById('searchInput').addEventListener('input', filterAndSort);
     document.getElementById('sortSelect').addEventListener('change', filterAndSort);
 
@@ -289,33 +371,33 @@
         document.getElementById('addFormBulk').style.display = mode === 'single' ? 'none' : 'block';
     }
 
-    // 1件登録 (重複チェック付き)
+    // 1件送信
     document.getElementById('addFormSingle').addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
         
-        // 重複チェック
         if(isDuplicate(formData.get('year'), formData.get('subject'), formData.get('teacher'))) {
             alert("⚠️ その過去問はすでに登録されています！");
-            return; // ここで中断
+            return;
         }
 
         const btn = document.getElementById('submitBtnSingle');
         await sendData(e.target, btn, Object.fromEntries(formData.entries()));
     });
 
-    // まとめて登録 (重複はスキップ)
+    // まとめて送信
     document.getElementById('addFormBulk').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('submitBtnBulk');
         const text = document.getElementById('bulkInput').value;
-        const progressBar = document.getElementById('bulkProgress').querySelector('.progress-bar');
-        document.getElementById('bulkProgress').style.display = 'flex';
+        const progress = document.getElementById('bulkProgress');
+        const progressBar = progress.querySelector('.progress-bar');
         
         if(!text.trim()) return;
 
         btn.innerText = '登録中...';
         btn.disabled = true;
+        progress.style.display = 'flex';
 
         const lines = text.split('\n').filter(line => line.trim() !== "");
         let successCount = 0;
@@ -330,11 +412,9 @@
                 const subject = parts[1].trim();
                 const teacher = parts[2] ? parts[2].trim() : "";
 
-                // 重複チェック: 重複していたらスキップして次へ
                 if(isDuplicate(year, subject, teacher)) {
                     skipCount++;
                 } else {
-                    // 重複していない場合のみ送信
                     try {
                         const data = { year, subject, teacher };
                         await fetch(GAS_URL, {
@@ -344,34 +424,29 @@
                             headers: { 'Content-Type': 'application/json' }
                         });
                         successCount++;
-                        // ローカルデータにも仮追加して、連続投稿時の重複も防ぐ
                         allData.push(["New", year, subject, teacher]);
                     } catch(err) {
-                        console.error("Error:", err);
+                        console.error("Line error:", err);
                     }
                 }
             }
-            // 進捗バー
             const pct = Math.round(((i + 1) / lines.length) * 100);
             progressBar.style.width = pct + '%';
             await new Promise(r => setTimeout(r, 500)); 
         }
 
         let msg = `${lines.length}件中、${successCount}件登録しました。`;
-        if(skipCount > 0) {
-            msg += `\n(⚠️ ${skipCount}件は重複のためスキップしました)`;
-        }
+        if(skipCount > 0) msg += `\n(⚠️ ${skipCount}件は重複でスキップ)`;
         alert(msg);
 
         btn.innerText = '一括登録';
         btn.disabled = false;
-        document.getElementById('bulkProgress').style.display = 'none';
-        document.getElementById('bulkInput').value = '';
+        progress.style.display = 'none';
+        document.getElementById('bulkInput').value = ''; 
         toggleAddForm();
         setTimeout(loadData, 2000);
     });
 
-    // 共通送信処理
     async function sendData(form, btn, data) {
         const originalText = btn.innerText;
         btn.innerText = '送信中...';
