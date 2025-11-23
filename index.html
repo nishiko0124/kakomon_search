@@ -20,14 +20,14 @@
             position: sticky;
             top: 10px;
             z-index: 100;
-            background: rgba(248, 249, 250, 0.9); /* 背景が透けないように */
+            background: rgba(248, 249, 250, 0.9);
             padding-bottom: 10px;
             border-radius: 15px;
         }
         .search-box {
             border: none;
-            border-radius: 50px; /* 丸っこく */
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08); /* ふんわり影 */
+            border-radius: 50px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             padding: 15px 25px;
             font-size: 1.1rem;
             background-color: #fff;
@@ -37,7 +37,7 @@
             outline: none;
         }
 
-        /* テーブルのデザイン：太字をやめてスッキリと */
+        /* テーブルのデザイン */
         .table-card {
             border: none;
             border-radius: 12px;
@@ -57,7 +57,7 @@
             padding: 15px;
             vertical-align: middle;
             border-bottom: 1px solid #f5f5f5;
-            font-weight: 400; /* 太字解除 */
+            font-weight: 400;
             color: #444;
         }
         .table-row:hover { background-color: #fcfcfc; }
@@ -117,7 +117,7 @@
 
     <div class="search-container">
         <div class="position-relative">
-            <input type="text" id="searchInput" class="form-control search-box" placeholder="キーワードを入力 (例: 民法 田中)">
+            <input type="text" id="searchInput" class="form-control search-box" placeholder="キーワードを入力 (例: 民法 田中)" autocomplete="off">
             <i class="bi bi-search position-absolute text-muted" style="right: 20px; top: 18px;"></i>
         </div>
     </div>
@@ -150,8 +150,7 @@
     // ▼▼▼ 設定エリア ▼▼▼
 
     // 1. 【ここを修正してください！】 GASのデプロイURL (/execで終わるやつ)
-    // 今のURL(.../library/...)は間違いです！修正しないと追加ボタンが動きません。
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzwMX2VOnzGNW_oM8PjMqd6aVHY8r_szMLiMEgdx9Ugme420HCvNdOx635At_fitTQl2A/exec'; 
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzwMX2VOnzGNW_oM8PjMqd6aVHY8r_szMLiMEgdx9Ugme420HCvNdOx635At_fitTQl2A/exec';
 
     // 2. CSV URL (これはOK)
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnletGVlj53bq-YG9G1NM0jXyWZYsT_0D5O6iIpnbGGtiIbItaZexEvyeJ8xgAhkpuRm2fxHYjRuce/pub?gid=0&single=true&output=csv';
@@ -191,7 +190,6 @@
 
             const tr = document.createElement('tr');
             tr.className = 'table-row';
-            // 太字(fw-bold)を削除し、色味を少し調整
             tr.innerHTML = `
                 <td class="text-primary">${year}</td>
                 <td style="font-weight: 500;">${subject}</td>
@@ -201,18 +199,16 @@
         });
     }
 
-    // ★検索機能の強化（スペース区切りでAND検索）
+    // ★検索機能（AND検索）
     document.getElementById('searchInput').addEventListener('input', (e) => {
         const inputVal = e.target.value.toLowerCase();
 
-        // 全角スペースを半角に変換して、スペースで単語に分割する
+        // 全角スペースを半角に変換して分割
         const keywords = inputVal.replace(/　/g, ' ').split(' ').filter(k => k !== "");
 
         const filtered = allData.filter(row => {
-            // その行の全データを1つの文字列にする
             const rowString = row.join(' ').toLowerCase();
-
-            // すべてのキーワードが含まれているかチェック (AND検索)
+            // すべてのキーワードが含まれているかチェック
             return keywords.every(word => rowString.includes(word));
         });
 
