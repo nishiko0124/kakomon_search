@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>過去問検索 & 追加</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f0f2f5; font-family: "Helvetica Neue", Arial, sans-serif; }
+        .main-container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .search-card { border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .add-card { border: none; border-radius: 15px; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: none; }
+        .table-row { transition: all 0.2s; }
+        .table-row:hover { background-color: #f8f9fa; }
+        .fab-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 30px; font-size: 24px; box-shadow: 0 4px 10px rgba(0,123,255,0.4); z-index: 1000; }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <h2 class="text-center mb-4 fw-bold text-primary"><i class="bi bi-journal-bookmark-fill"></i> 過去問DB</h2>
+
+    <div id="addSection" class="add-card p-4 mb-4">
+        <h5 class="mb-3 fw-bold text-success"><i class="bi bi-plus-circle-fill"></i> 新しい過去問を追加</h5>
+        <form id="addForm">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <input type="number" name="year" class="form-control" placeholder="年度 (2024)" required>
+                </div>
+                <div class="col-md-5">
+                    <input type="text" name="subject" class="form-control" placeholder="科目名" required>
+                </div>
+                <div class="col-md-4">
+                    <input type="text" name="teacher" class="form-control" placeholder="教員名">
+                </div>
+                <div class="col-12 text-end">
+                    <button type="button" class="btn btn-secondary me-2" onclick="toggleAddForm()">閉じる</button>
+                    <button type="submit" class="btn btn-success px-4" id="submitBtn">登録する</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="search-card bg-white p-4 mb-4">
+        <div class="input-group input-group-lg">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" id="searchInput" class="form-control border-start-0" placeholder="科目、教員、年度で検索...">
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <span id="count" class="text-muted small">読み込み中...</span>
+        <div id="loadingSpinner" class="spinner-border text-primary spinner-border-sm" role="status"></div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th width="15%">年度</th>
+                    <th width="45%">科目名</th>
+                    <th width="40%">教員名</th>
+                </tr>
+            </thead>
+            <tbody id="resultBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<button class="btn btn-primary fab-btn" onclick="toggleAddForm()">
+    <i class="bi bi-plus-lg"></i>
+</button>
+
+<script>
+    // ▼▼▼ 設定エリア ▼▼▼
+
+    // 1. 【ここだけ修正必要！】GASのデプロイURL（末尾が /exec のもの）
+    const GAS_URL = 'https://script.google.com/macros/library/d/1KVXdYMpeOr4AaGUY8Z6UBE80AI4dnQc1Vg6vv8H1aHRsQ65j0K7_MD2o/1';
+
+    // 2. あなたの正しいCSV URL（入力済み！）
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnletGVlj53bq-YG9G1NM0jXyWZYsT_0D5O6iIpnbGGtiIbItaZexEvyeJ8xgAhkpuRm2fxHYjRuce/pub?gid=0&single=true&output=csv';
+
+    // ▲▲▲ 設定エリアここまで ▲▲▲
+
+
+    let allData = [];
+    const tbody = document.getElementById('resultBody');
+
+    // データ読み込み
+    async function loadData() {
+        document.getElementById('loadingSpinner').style.display = 'block';
+        try {
+            const res = await fetch(CSV_URL);
+            const text = await res.text();
+            const rows = text.split('\n').map(r => r.split(','));
+
+            // 1行目はヘッダーとして除外
+            allData = rows.slice(1).filter(r => r.length > 1);
+            renderTable(allData);
+        } catch (e) {
+            console.error(e);
+            alert("データの読み込みに失敗しました。GitHub Pages上で確認してください。");
+        } finally {
+            document.getElementById('loadingSpinner').style.display = 'none';
+        }
+    }
+
+    // テーブル描画
+    function renderTable(data) {
+        tbody.innerHTML = '';
+        document.getElementById('count').innerText = `${data.length} 件見つかりました`;
+
+        data.forEach(row => {
+            // 列の定義（スプレッドシートに合わせて調整）
+            // A列[0]=タイムスタンプ, B列[1]=年度, C列[2]=科目, D列[3]=教員
+            const year = row[1] || "";
+            const subject = row[2] || "";
+            const teacher = row[3] || "";
+
+            // もし「年度」が表示されず「日付」が出る場合は、row[0], row[1]... に戻してください
+
+            const tr = document.createElement('tr');
+            tr.className = 'table-row';
+            tr.innerHTML = `
+                <td class="fw-bold text-primary">${year}</td>
+                <td class="fw-bold">${subject}</td>
+                <td class="text-muted">${teacher}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 検索機能
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        const filtered = allData.filter(row => row.some(col => col && col.toLowerCase().includes(term)));
+        renderTable(filtered);
+    });
+
+    // フォーム開閉
+    function toggleAddForm() {
+        const formDiv = document.getElementById('addSection');
+        formDiv.style.display = (formDiv.style.display === 'none' || formDiv.style.display === '') ? 'block' : 'none';
+        if(formDiv.style.display === 'block') window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 送信処理
+    document.getElementById('addForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (GAS_URL.includes('xxxxxxxx')) {
+            alert('エラー: GAS_URLが設定されていません！コード内のURLを書き換えてください。');
+            return;
+        }
+
+        const btn = document.getElementById('submitBtn');
+        const originalText = btn.innerText;
+        btn.innerText = '送信中...';
+        btn.disabled = true;
+
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            await fetch(GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify(data),
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            alert("登録しました！");
+            e.target.reset();
+            toggleAddForm();
+            setTimeout(loadData, 2000); // 2秒後に再読み込み
+        } catch (err) {
+            alert("送信失敗: " + err);
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    });
+
+    loadData();
+</script>
+
+</body>
+</html>
