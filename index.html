@@ -7,21 +7,21 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
-        /* 全体のフォントをスッキリさせる */
-        body {
-            background-color: #f8f9fa;
+        /* 全体のフォント設定 */
+        body { 
+            background-color: #f8f9fa; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             color: #333;
         }
         .main-container { max-width: 900px; margin: 0 auto; padding: 20px; }
 
-        /* 検索バーのデザイン：余裕を持たせて浮かせる */
+        /* 検索バー */
         .search-container {
             position: sticky;
             top: 10px;
             z-index: 100;
-            background: rgba(248, 249, 250, 0.9);
-            padding-bottom: 10px;
+            background: rgba(248, 249, 250, 0.95);
+            padding: 10px 0;
             border-radius: 15px;
         }
         .search-box {
@@ -36,8 +36,17 @@
             box-shadow: 0 4px 25px rgba(13,110,253,0.15);
             outline: none;
         }
+        .sort-select {
+            border: none;
+            border-radius: 50px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 0 20px;
+            height: 58px; 
+            background-color: #fff;
+            cursor: pointer;
+        }
 
-        /* テーブルのデザイン */
+        /* テーブル */
         .table-card {
             border: none;
             border-radius: 12px;
@@ -50,36 +59,40 @@
             border-bottom: 2px solid #f0f0f0;
             color: #888;
             font-weight: 600;
-            font-size: 0.9rem;
             padding: 15px;
         }
         .table td {
             padding: 15px;
             vertical-align: middle;
             border-bottom: 1px solid #f5f5f5;
-            font-weight: 400;
             color: #444;
         }
         .table-row:hover { background-color: #fcfcfc; }
 
         /* 追加カード */
-        .add-card {
-            border: none;
-            border-radius: 15px;
-            background: #fff;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
-            display: none;
+        .add-card { 
+            border: none; 
+            border-radius: 15px; 
+            background: #fff; 
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1); 
+            display: none; 
             margin-bottom: 30px;
+        }
+        
+        .bulk-textarea {
+            font-family: monospace;
+            font-size: 0.9rem;
+            background-color: #fdfdfd;
         }
 
         /* プラスボタン */
-        .fab-btn {
-            position: fixed; bottom: 30px; right: 30px;
-            width: 56px; height: 56px;
-            border-radius: 50%;
-            font-size: 24px;
-            box-shadow: 0 4px 15px rgba(0,123,255,0.3);
-            z-index: 1000;
+        .fab-btn { 
+            position: fixed; bottom: 30px; right: 30px; 
+            width: 56px; height: 56px; 
+            border-radius: 50%; 
+            font-size: 24px; 
+            box-shadow: 0 4px 15px rgba(0,123,255,0.3); 
+            z-index: 1000; 
             border: none;
         }
     </style>
@@ -92,8 +105,17 @@
     </div>
 
     <div id="addSection" class="add-card p-4">
-        <h5 class="mb-4 fw-bold text-dark"><i class="bi bi-pencil-square"></i> 新しい過去問を追加</h5>
-        <form id="addForm">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold text-dark m-0"><i class="bi bi-pencil-square"></i> 過去問を追加</h5>
+            <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" name="addMode" id="modeSingle" autocomplete="off" checked onclick="switchAddMode('single')">
+                <label class="btn btn-outline-primary btn-sm" for="modeSingle">1件ずつ</label>
+                <input type="radio" class="btn-check" name="addMode" id="modeBulk" autocomplete="off" onclick="switchAddMode('bulk')">
+                <label class="btn btn-outline-primary btn-sm" for="modeBulk">まとめて(CSV)</label>
+            </div>
+        </div>
+
+        <form id="addFormSingle">
             <div class="row g-3">
                 <div class="col-md-3">
                     <label class="form-label small text-muted">年度</label>
@@ -107,18 +129,41 @@
                     <label class="form-label small text-muted">教員名</label>
                     <input type="text" name="teacher" class="form-control" placeholder="教員名">
                 </div>
-                <div class="col-12 text-end mt-4">
-                    <button type="button" class="btn btn-light me-2" onclick="toggleAddForm()">キャンセル</button>
-                    <button type="submit" class="btn btn-primary px-4" id="submitBtn">登録</button>
+                <div class="col-12 text-end mt-3">
+                    <button type="button" class="btn btn-light me-2" onclick="toggleAddForm()">閉じる</button>
+                    <button type="submit" class="btn btn-primary px-4" id="submitBtnSingle">登録</button>
                 </div>
+            </div>
+        </form>
+
+        <form id="addFormBulk" style="display:none;">
+            <div class="mb-3">
+                <label class="form-label small text-muted">CSV形式で貼り付け (重複は自動でスキップされます)</label>
+                <textarea id="bulkInput" class="form-control bulk-textarea" rows="5" placeholder="2024,民法,田中&#13;&#10;2023,憲法,鈴木" required></textarea>
+                <div class="form-text">カンマ(,) または タブ区切りに対応。</div>
+            </div>
+            <div class="text-end">
+                <button type="button" class="btn btn-light me-2" onclick="toggleAddForm()">閉じる</button>
+                <button type="submit" class="btn btn-success px-4" id="submitBtnBulk">一括登録</button>
+            </div>
+            <div id="bulkProgress" class="progress mt-3" style="display:none; height: 5px;">
+                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
             </div>
         </form>
     </div>
 
     <div class="search-container">
-        <div class="position-relative">
-            <input type="text" id="searchInput" class="form-control search-box" placeholder="キーワードを入力 (例: 民法 田中)" autocomplete="off">
-            <i class="bi bi-search position-absolute text-muted" style="right: 20px; top: 18px;"></i>
+        <div class="row g-2 align-items-center">
+            <div class="col-9 col-md-10 position-relative">
+                <input type="text" id="searchInput" class="form-control search-box" placeholder="キーワード (例: 民法 田中)" autocomplete="off">
+                <i class="bi bi-search position-absolute text-muted" style="right: 25px; top: 18px;"></i>
+            </div>
+            <div class="col-3 col-md-2">
+                <select id="sortSelect" class="form-select sort-select">
+                    <option value="desc">新しい順</option>
+                    <option value="asc">古い順</option>
+                </select>
+            </div>
         </div>
     </div>
 
@@ -136,8 +181,7 @@
                     <th width="40%">教員名</th>
                 </tr>
             </thead>
-            <tbody id="resultBody">
-                </tbody>
+            <tbody id="resultBody"></tbody>
         </table>
     </div>
 </div>
@@ -148,16 +192,14 @@
 
 <script>
     // ▼▼▼ 設定エリア ▼▼▼
-
-    // 1. 【ここを修正してください！】 GASのデプロイURL (/execで終わるやつ)
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbzwMX2VOnzGNW_oM8PjMqd6aVHY8r_szMLiMEgdx9Ugme420HCvNdOx635At_fitTQl2A/exec';
 
-    // 2. CSV URL (これはOK)
+    // 2. CSV URL (入力済み)
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnletGVlj53bq-YG9G1NM0jXyWZYsT_0D5O6iIpnbGGtiIbItaZexEvyeJ8xgAhkpuRm2fxHYjRuce/pub?gid=0&single=true&output=csv';
-
     // ▲▲▲ 設定エリアここまで ▲▲▲
 
     let allData = [];
+    let filteredData = [];
     const tbody = document.getElementById('resultBody');
 
     // データ読み込み
@@ -168,7 +210,7 @@
             const text = await res.text();
             const rows = text.split('\n').map(r => r.split(','));
             allData = rows.slice(1).filter(r => r.length > 1);
-            renderTable(allData);
+            filterAndSort(); 
         } catch (e) {
             console.error(e);
             alert("読み込みエラー");
@@ -177,13 +219,32 @@
         }
     }
 
+    // フィルタ & ソート
+    function filterAndSort() {
+        const inputVal = document.getElementById('searchInput').value.toLowerCase();
+        const sortMode = document.getElementById('sortSelect').value;
+
+        const keywords = inputVal.replace(/　/g, ' ').split(' ').filter(k => k !== "");
+        filteredData = allData.filter(row => {
+            const rowString = row.join(' ').toLowerCase();
+            return keywords.every(word => rowString.includes(word));
+        });
+
+        filteredData.sort((a, b) => {
+            const yearA = parseInt(a[1]) || 0;
+            const yearB = parseInt(b[1]) || 0;
+            return sortMode === 'desc' ? yearB - yearA : yearA - yearB;
+        });
+
+        renderTable(filteredData);
+    }
+
     // テーブル描画
     function renderTable(data) {
         tbody.innerHTML = '';
         document.getElementById('count').innerText = `${data.length} 件`;
 
         data.forEach(row => {
-            // スプレッドシートの列定義 (A列を空けた前提で 1, 2, 3)
             const year = row[1] || "";
             const subject = row[2] || "";
             const teacher = row[3] || "";
@@ -191,7 +252,7 @@
             const tr = document.createElement('tr');
             tr.className = 'table-row';
             tr.innerHTML = `
-                <td class="text-primary">${year}</td>
+                <td class="text-primary fw-bold">${year}</td>
                 <td style="font-weight: 500;">${subject}</td>
                 <td class="text-muted">${teacher}</td>
             `;
@@ -199,50 +260,122 @@
         });
     }
 
-    // ★検索機能（AND検索）
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-        const inputVal = e.target.value.toLowerCase();
-
-        // 全角スペースを半角に変換して分割
-        const keywords = inputVal.replace(/　/g, ' ').split(' ').filter(k => k !== "");
-
-        const filtered = allData.filter(row => {
-            const rowString = row.join(' ').toLowerCase();
-            // すべてのキーワードが含まれているかチェック
-            return keywords.every(word => rowString.includes(word));
+    // ★重複チェック関数 (重要！)
+    function isDuplicate(year, subject, teacher) {
+        // 全データの中から、年度・科目・教員がすべて一致するものを探す
+        return allData.some(row => {
+            const dbYear = (row[1] || "").toString().trim();
+            const dbSubj = (row[2] || "").toString().trim();
+            const dbTeach = (row[3] || "").toString().trim();
+            
+            return dbYear === year.toString().trim() &&
+                   dbSubj === subject.toString().trim() &&
+                   dbTeach === teacher.toString().trim();
         });
-
-        renderTable(filtered);
-    });
-
-    // フォーム開閉
-    function toggleAddForm() {
-        const formDiv = document.getElementById('addSection');
-        if (formDiv.style.display === 'block') {
-            formDiv.style.display = 'none';
-        } else {
-            formDiv.style.display = 'block';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
     }
 
-    // 送信処理
-    document.getElementById('addForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
+    // イベントリスナー
+    document.getElementById('searchInput').addEventListener('input', filterAndSort);
+    document.getElementById('sortSelect').addEventListener('change', filterAndSort);
 
-        // URLチェック
-        if (GAS_URL.includes('library') || GAS_URL.includes('xxxx')) {
-            alert('【設定エラー】GASのURLが正しくありません。コード内のGAS_URLを「/exec」で終わるURLに書き換えてください。');
-            return;
+    function toggleAddForm() {
+        const formDiv = document.getElementById('addSection');
+        formDiv.style.display = (formDiv.style.display === 'block') ? 'none' : 'block';
+        if(formDiv.style.display === 'block') window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function switchAddMode(mode) {
+        document.getElementById('addFormSingle').style.display = mode === 'single' ? 'block' : 'none';
+        document.getElementById('addFormBulk').style.display = mode === 'single' ? 'none' : 'block';
+    }
+
+    // 1件登録 (重複チェック付き)
+    document.getElementById('addFormSingle').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        
+        // 重複チェック
+        if(isDuplicate(formData.get('year'), formData.get('subject'), formData.get('teacher'))) {
+            alert("⚠️ その過去問はすでに登録されています！");
+            return; // ここで中断
         }
 
-        const btn = document.getElementById('submitBtn');
+        const btn = document.getElementById('submitBtnSingle');
+        await sendData(e.target, btn, Object.fromEntries(formData.entries()));
+    });
+
+    // まとめて登録 (重複はスキップ)
+    document.getElementById('addFormBulk').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtnBulk');
+        const text = document.getElementById('bulkInput').value;
+        const progressBar = document.getElementById('bulkProgress').querySelector('.progress-bar');
+        document.getElementById('bulkProgress').style.display = 'flex';
+        
+        if(!text.trim()) return;
+
+        btn.innerText = '登録中...';
+        btn.disabled = true;
+
+        const lines = text.split('\n').filter(line => line.trim() !== "");
+        let successCount = 0;
+        let skipCount = 0;
+
+        for (let i = 0; i < lines.length; i++) {
+            const cleanLine = lines[i].replace(/\t/g, ',');
+            const parts = cleanLine.split(',');
+            
+            if(parts.length >= 2) {
+                const year = parts[0].trim();
+                const subject = parts[1].trim();
+                const teacher = parts[2] ? parts[2].trim() : "";
+
+                // 重複チェック: 重複していたらスキップして次へ
+                if(isDuplicate(year, subject, teacher)) {
+                    skipCount++;
+                } else {
+                    // 重複していない場合のみ送信
+                    try {
+                        const data = { year, subject, teacher };
+                        await fetch(GAS_URL, {
+                            method: 'POST',
+                            body: JSON.stringify(data),
+                            mode: 'no-cors',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                        successCount++;
+                        // ローカルデータにも仮追加して、連続投稿時の重複も防ぐ
+                        allData.push(["New", year, subject, teacher]);
+                    } catch(err) {
+                        console.error("Error:", err);
+                    }
+                }
+            }
+            // 進捗バー
+            const pct = Math.round(((i + 1) / lines.length) * 100);
+            progressBar.style.width = pct + '%';
+            await new Promise(r => setTimeout(r, 500)); 
+        }
+
+        let msg = `${lines.length}件中、${successCount}件登録しました。`;
+        if(skipCount > 0) {
+            msg += `\n(⚠️ ${skipCount}件は重複のためスキップしました)`;
+        }
+        alert(msg);
+
+        btn.innerText = '一括登録';
+        btn.disabled = false;
+        document.getElementById('bulkProgress').style.display = 'none';
+        document.getElementById('bulkInput').value = '';
+        toggleAddForm();
+        setTimeout(loadData, 2000);
+    });
+
+    // 共通送信処理
+    async function sendData(form, btn, data) {
         const originalText = btn.innerText;
         btn.innerText = '送信中...';
         btn.disabled = true;
-
-        const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData.entries());
 
         try {
             await fetch(GAS_URL, {
@@ -252,7 +385,7 @@
                 headers: { 'Content-Type': 'application/json' }
             });
             alert("登録しました！");
-            e.target.reset();
+            form.reset();
             toggleAddForm();
             setTimeout(loadData, 2000);
         } catch (err) {
@@ -261,7 +394,7 @@
             btn.innerText = originalText;
             btn.disabled = false;
         }
-    });
+    }
 
     loadData();
 </script>
