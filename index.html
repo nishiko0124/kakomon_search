@@ -105,10 +105,10 @@
             font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            padding: 15px 20px; /* パディング調整 */
+            padding: 15px 20px;
         }
         .table td {
-            padding: 15px 20px; /* パディング調整 */
+            padding: 15px 20px;
             vertical-align: middle;
             border-bottom: 1px solid #edf2f7;
             color: #2d3748;
@@ -124,7 +124,7 @@
             font-weight: 800;
             font-size: 0.9rem;
             display: inline-block;
-            white-space: nowrap; /* ★年度は絶対に改行させない */
+            white-space: nowrap; 
         }
 
         /* 追加カード */
@@ -196,35 +196,30 @@
         .custom-toast.error { background: #ef4444; }
 
 
-        /* ▼▼▼ スマホ最適化（リスト形式を維持しつつ調整） ▼▼▼ */
+        /* ▼▼▼ スマホ最適化 ▼▼▼ */
         @media (max-width: 576px) {
-            .main-container { padding: 20px 10px; } /* 左右の余白を減らす */
+            .main-container { padding: 20px 10px; }
             .app-title { font-size: 1.6rem; }
             
-            /* テーブルの余白をギュッと詰める */
             .table th, .table td {
-                padding: 10px 8px; /* パディングをかなり小さく */
-                font-size: 0.85rem; /* 文字サイズを少し小さく */
+                padding: 10px 8px;
+                font-size: 0.85rem;
             }
 
-            /* 年度の列：改行禁止＆幅を最小限に */
             .td-year {
                 white-space: nowrap;
-                width: 1%; /* 必要最小限の幅にする */
+                width: 1%;
             }
             .year-badge {
-                padding: 4px 8px; /* バッジも少し小さく */
+                padding: 4px 8px;
                 font-size: 0.8rem;
             }
 
-            /* 科目：メインなので太字 */
             .td-subject {
                 font-weight: 600;
-                /* 必要ならここで改行を許可 */
                 word-break: break-all; 
             }
 
-            /* 教員：少し小さくしてスペース節約 */
             .td-teacher {
                 font-size: 0.8rem;
                 color: #666;
@@ -269,6 +264,11 @@
                 <div class="col-md-4 col-12">
                     <input type="text" name="teacher" class="form-control form-control-lg" placeholder="教員名" style="border-radius: 12px;">
                 </div>
+                
+                <div class="col-12">
+                     <input type="text" name="keywords" class="form-control" placeholder="検索キーワード（例: さいとう サイトウ）※一覧には表示されません" style="border-radius: 12px; background-color: #fafafa; font-size: 0.9rem;">
+                </div>
+
                 <div class="col-12 text-end mt-4">
                     <button type="button" class="btn btn-light me-2 rounded-pill px-4" onclick="toggleAddForm()">キャンセル</button>
                     <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold" id="submitBtnSingle" style="background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%); border:none;">登録</button>
@@ -279,7 +279,8 @@
         <form id="addFormBulk" style="display:none;">
             <div class="mb-3">
                 <label class="form-label small text-muted fw-bold">CSV貼り付け (重複はスキップ)</label>
-                <textarea id="bulkInput" class="form-control bulk-textarea" rows="5" placeholder="2024,民法,田中&#13;&#10;2023,憲法,鈴木" required></textarea>
+                <textarea id="bulkInput" class="form-control bulk-textarea" rows="5" placeholder="2024,民法,田中,タナカ&#13;&#10;2023,憲法,鈴木,スズキ" required></textarea>
+                <div class="form-text">形式: 年度,科目,教員,検索キーワード(任意)</div>
             </div>
             <div class="text-end">
                 <button type="button" class="btn btn-light me-2 rounded-pill px-4" onclick="toggleAddForm()">キャンセル</button>
@@ -333,8 +334,8 @@
 </button>
 
 <script>
-    // ▼▼▼ 設定エリア ▼▼▼
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzwMX2VOnzGNW_oM8PjMqd6aVHY8r_szMLiMEgdx9Ugme420HCvNdOx635At_fitTQl2A/exec';
+    // ▼▼▼ 設定エリア (★GASのURLを新しいものに変えてください！) ▼▼▼
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbws5WFKWA2YAzgWsT8__dlu3KrcDZxHMk-btUFnwrdtRZi-hej_AeiUQplSrQGNbDdF/exec'; // ★ここに新しいGASのURLを入れる！
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnletGVlj53bq-YG9G1NM0jXyWZYsT_0D5O6iIpnbGGtiIbItaZexEvyeJ8xgAhkpuRm2fxHYjRuce/pub?gid=0&single=true&output=csv';
     // ▲▲▲ 設定エリアここまで ▲▲▲
 
@@ -383,6 +384,7 @@
 
         const keywords = inputVal.replace(/　/g, ' ').split(' ').filter(k => k !== "");
         filteredData = allData.filter(row => {
+            // ★重要: row.join(' ') することで、隠しキーワード列（index 4）も検索対象に含まれます！
             const rowString = row.join(' ').toLowerCase();
             return keywords.every(word => rowString.includes(word));
         });
@@ -411,6 +413,7 @@
             const year = row[1] || "";
             const subject = row[2] || "";
             const teacher = row[3] || "";
+            // row[4] のキーワードは表示しません
 
             const tr = document.createElement('tr');
             tr.className = 'table-row';
@@ -448,6 +451,7 @@
         document.getElementById('addFormBulk').style.display = mode === 'single' ? 'none' : 'block';
     }
 
+    // 1件送信（キーワード対応）
     document.getElementById('addFormSingle').addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
@@ -461,6 +465,7 @@
         await sendData(e.target, btn, Object.fromEntries(formData.entries()));
     });
 
+    // 一括送信（キーワード対応）
     document.getElementById('addFormBulk').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('submitBtnBulk');
@@ -486,12 +491,14 @@
                 const year = parts[0].trim();
                 const subject = parts[1].trim();
                 const teacher = parts[2] ? parts[2].trim() : "";
+                // ★4つ目の要素があればキーワードとして取得
+                const keywords = parts[3] ? parts[3].trim() : "";
 
                 if(isDuplicate(year, subject, teacher)) {
                     skipCount++;
                 } else {
                     try {
-                        const data = { year, subject, teacher };
+                        const data = { year, subject, teacher, keywords }; // キーワードも含めて送信
                         await fetch(GAS_URL, {
                             method: 'POST',
                             body: JSON.stringify(data),
@@ -499,7 +506,8 @@
                             headers: { 'Content-Type': 'application/json' }
                         });
                         successCount++;
-                        allData.push(["New", year, subject, teacher]);
+                        // 表示用に仮追加（検索ですぐ引っかかるようになります）
+                        allData.push(["New", year, subject, teacher, keywords]);
                     } catch(err) {
                         console.error("Line error:", err);
                     }
