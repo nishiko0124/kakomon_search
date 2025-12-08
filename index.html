@@ -169,6 +169,46 @@
             border-color: #2563eb;
             font-weight: bold;
         }
+
+        /* モバイル対応 */
+        @media (max-width: 576px) {
+            .main-container { padding: 20px 15px; }
+            .app-title { font-size: 1.5rem; }
+            .app-subtitle { font-size: 0.7rem; letter-spacing: 0.1em; }
+            .search-box { 
+                font-size: 0.9rem; 
+                padding: 12px 15px 12px 40px; 
+                border-radius: 12px;
+            }
+            .search-icon { left: 15px; font-size: 1rem; }
+            .sort-select { 
+                height: 46px; 
+                padding: 0 10px; 
+                font-size: 0.8rem;
+                border-radius: 12px;
+            }
+            .table th { 
+                padding: 12px 8px; 
+                font-size: 0.7rem; 
+            }
+            .table td { 
+                padding: 12px 8px; 
+                font-size: 0.85rem;
+            }
+            .year-badge { 
+                padding: 4px 8px; 
+                font-size: 0.75rem; 
+            }
+            .fab-btn { 
+                width: 50px; 
+                height: 50px; 
+                font-size: 22px;
+                bottom: 20px;
+                right: 20px;
+            }
+            .add-card { padding: 20px !important; }
+            .add-card h5 { font-size: 1rem; }
+        }
     </style>
 </head>
 <body>
